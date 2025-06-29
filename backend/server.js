@@ -21,7 +21,13 @@ const PORT = process.env.PORT || 5000
 app.use(helmet())
 
 // CORS configuration
-const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'http://localhost:3001']
+const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [
+  'http://localhost:3000', 
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'https://my-inventory-project-9dccf.web.app',
+  'https://my-inventory-project-9dccf.firebaseapp.com'
+]
 
 app.use(cors({
   origin: function (origin, callback) {
