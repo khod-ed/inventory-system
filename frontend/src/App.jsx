@@ -12,6 +12,7 @@ import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 
 // Inventory Management System - Test GitHub Actions Deployment
+// Testing Firebase Service Account Secret - Should deploy automatically
 function App() {
   const { isAuthenticated } = useAuth()
 
