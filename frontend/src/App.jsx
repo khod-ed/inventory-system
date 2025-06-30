@@ -1,3 +1,4 @@
+// Triggering GitHub Actions workflow for frontend deployment
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
