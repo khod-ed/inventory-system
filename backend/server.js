@@ -21,27 +21,32 @@ const PORT = process.env.PORT || 5000
 app.use(helmet())
 
 // CORS configuration
-const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [
-  'http://localhost:3000', 
+const allowedOrigins = [
+  'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
   'https://my-inventory-project-9dccf.web.app',
-  'https://my-inventory-project-9dccf.firebaseapp.com'
-]
+  'https://my-inventory-project-9dccf.firebaseapp.com',
+  'https://v0-admin-inventory-system-3y9awla45-khod-eds-projects.vercel.app',
+  // Add your production frontend domain here if different
+];
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true)
-    
-    if (corsOrigins.indexOf(origin) !== -1) {
-      callback(null, true)
+    // Allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'))
+      return callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
-}))
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -79,6 +84,13 @@ app.get('/api/health', (req, res) => {
   })
 })
 
+// Add a root route for clarity
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to the Inventory Management API. See /api/health for status.'
+  });
+});
+
 // API routes
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
@@ -109,11 +121,11 @@ app.use((err, req, res, next) => {
   })
 })
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`)
-  console.log(`📊 Environment: ${process.env.NODE_ENV}`)
-  console.log(`🔗 Health check: http://localhost:${PORT}/api/health`)
-})
+// Remove the app.listen block for Vercel compatibility
+// app.listen(PORT, () => {
+//   console.log(`🚀 Server running on port ${PORT}`)
+//   console.log(`📊 Environment: ${process.env.NODE_ENV}`)
+//   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`)
+// });
 
-module.exports = app 
+module.exports = app; 
