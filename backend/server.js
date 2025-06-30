@@ -73,7 +73,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
-    message: 'Inventory Management API is running',
+    message: 'Inventory Management API is running - GitHub Actions Test',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV
   })

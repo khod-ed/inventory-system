@@ -11,6 +11,7 @@ import SuppliersPage from './pages/SuppliersPage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 
+// Inventory Management System - Test GitHub Actions Deployment
 function App() {
   const { isAuthenticated } = useAuth()
 
