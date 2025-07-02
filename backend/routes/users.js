@@ -25,7 +25,7 @@ const userUpdateValidation = [
 // @access  Private (Admin)
 router.get('/', adminAuth, async (req, res) => {
   try {
-    const users = getAllUsers()
+    const users = await getAllUsers()
     successResponse(res, users)
   } catch (error) {
     console.error('Get users error:', error)
@@ -38,7 +38,7 @@ router.get('/', adminAuth, async (req, res) => {
 // @access  Private (Admin)
 router.get('/:id', adminAuth, async (req, res) => {
   try {
-    const user = findUserById(req.params.id)
+    const user = await findUserById(req.params.id)
     if (!user) {
       return errorResponse(res, 'User not found', 404)
     }
@@ -57,12 +57,12 @@ router.get('/:id', adminAuth, async (req, res) => {
 // @access  Private (Admin)
 router.put('/:id', adminAuth, userUpdateValidation, validate, async (req, res) => {
   try {
-    const user = findUserById(req.params.id)
+    const user = await findUserById(req.params.id)
     if (!user) {
       return errorResponse(res, 'User not found', 404)
     }
 
-    const updatedUser = updateUser(req.params.id, req.body)
+    const updatedUser = await updateUser(req.params.id, req.body)
     if (!updatedUser) {
       return errorResponse(res, 'Failed to update user', 500)
     }
@@ -81,7 +81,7 @@ router.put('/:id', adminAuth, userUpdateValidation, validate, async (req, res) =
 // @access  Private (Admin)
 router.delete('/:id', adminAuth, async (req, res) => {
   try {
-    const user = findUserById(req.params.id)
+    const user = await findUserById(req.params.id)
     if (!user) {
       return errorResponse(res, 'User not found', 404)
     }
@@ -91,7 +91,7 @@ router.delete('/:id', adminAuth, async (req, res) => {
       return errorResponse(res, 'Cannot delete your own account', 400)
     }
 
-    deleteUser(req.params.id)
+    await deleteUser(req.params.id)
     successResponse(res, null, 'User deleted successfully')
   } catch (error) {
     console.error('Delete user error:', error)

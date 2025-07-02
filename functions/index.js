@@ -29,29 +29,18 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// CORS configuration for Firebase Functions
+// CORS configuration for Firebase Functions (must be first)
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    // Allow Firebase hosting domain and local development
-    const allowedOrigins = [
-      "https://my-inventory-project-9dccf.web.app",
-      "https://my-inventory-project-9dccf.firebaseapp.com",
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://localhost:5173",
-    ];
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: [
+    "https://my-inventory-project-9dccf.web.app",
+    "https://my-inventory-project-9dccf.firebaseapp.com",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:5173"
+  ],
   credentials: true,
 }));
+app.options('*', cors());
 
 // Rate limiting
 const limiter = rateLimit({

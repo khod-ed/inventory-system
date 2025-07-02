@@ -37,11 +37,11 @@ router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 10, lowStock } = req.query
 
-    let inventory = getAllInventory()
+    let inventory = await getAllInventory()
 
     // Filter low stock items if requested
     if (lowStock === 'true') {
-      inventory = getLowStockItems()
+      inventory = await getLowStockItems()
     }
 
     // Pagination
@@ -50,8 +50,8 @@ router.get('/', auth, async (req, res) => {
     const paginatedInventory = inventory.slice(startIndex, endIndex)
 
     // Add product details
-    const enrichedInventory = paginatedInventory.map(item => {
-      const product = findProductById(item.productId)
+    const enrichedInventory = await Promise.all(paginatedInventory.map(async item => {
+      const product = await findProductById(item.productId)
       return {
         ...item,
         product: product ? {
@@ -64,7 +64,7 @@ router.get('/', auth, async (req, res) => {
           maxStock: product.maxStock
         } : null
       }
-    })
+    }))
 
     paginatedResponse(res, enrichedInventory, page, limit, inventory.length)
   } catch (error) {
@@ -78,11 +78,11 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.get('/low-stock', auth, async (req, res) => {
   try {
-    const lowStockItems = getLowStockItems()
+    const lowStockItems = await getLowStockItems()
     
     // Add product details
-    const enrichedItems = lowStockItems.map(item => {
-      const product = findProductById(item.productId)
+    const enrichedItems = await Promise.all(lowStockItems.map(async item => {
+      const product = await findProductById(item.productId)
       return {
         ...item,
         product: product ? {
@@ -95,7 +95,7 @@ router.get('/low-stock', auth, async (req, res) => {
           maxStock: product.maxStock
         } : null
       }
-    })
+    }))
 
     successResponse(res, enrichedItems)
   } catch (error) {
@@ -109,7 +109,7 @@ router.get('/low-stock', auth, async (req, res) => {
 // @access  Private
 router.get('/value', auth, async (req, res) => {
   try {
-    const totalValue = getInventoryValue()
+    const totalValue = await getInventoryValue()
     successResponse(res, { totalValue })
   } catch (error) {
     console.error('Get inventory value error:', error)
@@ -122,13 +122,13 @@ router.get('/value', auth, async (req, res) => {
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
-    const inventoryItem = findInventoryById(req.params.id)
+    const inventoryItem = await findInventoryById(req.params.id)
     if (!inventoryItem) {
       return errorResponse(res, 'Inventory item not found', 404)
     }
 
     // Add product details
-    const product = findProductById(inventoryItem.productId)
+    const product = await findProductById(inventoryItem.productId)
     const enrichedItem = {
       ...inventoryItem,
       product: product ? {
@@ -157,18 +157,18 @@ router.post('/', adminAuth, inventoryValidation, validate, async (req, res) => {
     const { productId } = req.body
 
     // Check if product exists
-    const product = findProductById(productId)
+    const product = await findProductById(productId)
     if (!product) {
       return errorResponse(res, 'Product not found', 400)
     }
 
     // Check if inventory item already exists for this product
-    const existingItem = findInventoryByProductId(productId)
+    const existingItem = await findInventoryByProductId(productId)
     if (existingItem) {
       return errorResponse(res, 'Inventory item already exists for this product', 400)
     }
 
-    const newInventoryItem = addInventoryItem(req.body)
+    const newInventoryItem = await addInventoryItem(req.body)
     successResponse(res, newInventoryItem, 'Inventory item created successfully', 201)
   } catch (error) {
     console.error('Create inventory item error:', error)
@@ -182,13 +182,13 @@ router.post('/', adminAuth, inventoryValidation, validate, async (req, res) => {
 router.put('/:id/stock', adminAuth, stockUpdateValidation, validate, async (req, res) => {
   try {
     const { quantity, reason } = req.body
-    const inventoryItem = findInventoryById(req.params.id)
+    const inventoryItem = await findInventoryById(req.params.id)
     
     if (!inventoryItem) {
       return errorResponse(res, 'Inventory item not found', 404)
     }
 
-    const updatedItem = updateInventoryQuantity(req.params.id, quantity, reason, req.user.id)
+    const updatedItem = await updateInventoryQuantity(req.params.id, quantity, reason, req.user.id)
     successResponse(res, updatedItem, 'Stock updated successfully')
   } catch (error) {
     console.error('Update stock error:', error)
@@ -201,12 +201,12 @@ router.put('/:id/stock', adminAuth, stockUpdateValidation, validate, async (req,
 // @access  Private (Admin)
 router.delete('/:id', adminAuth, async (req, res) => {
   try {
-    const inventoryItem = findInventoryById(req.params.id)
+    const inventoryItem = await findInventoryById(req.params.id)
     if (!inventoryItem) {
       return errorResponse(res, 'Inventory item not found', 404)
     }
 
-    deleteInventoryItem(req.params.id)
+    await deleteInventoryItem(req.params.id)
     successResponse(res, null, 'Inventory item deleted successfully')
   } catch (error) {
     console.error('Delete inventory item error:', error)
@@ -219,12 +219,12 @@ router.delete('/:id', adminAuth, async (req, res) => {
 // @access  Private
 router.get('/:id/transactions', auth, async (req, res) => {
   try {
-    const inventoryItem = findInventoryById(req.params.id)
+    const inventoryItem = await findInventoryById(req.params.id)
     if (!inventoryItem) {
       return errorResponse(res, 'Inventory item not found', 404)
     }
 
-    const transactions = getInventoryTransactions(req.params.id)
+    const transactions = await getInventoryTransactions(req.params.id)
     successResponse(res, transactions)
   } catch (error) {
     console.error('Get transactions error:', error)

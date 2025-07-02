@@ -1,4 +1,6 @@
-const bcrypt = require('bcryptjs')
+const { db } = require('../firebase-admin');
+const bcrypt = require('bcryptjs');
+const USERS_COLLECTION = 'users';
 
 // Mock users data (in a real app, this would be in a database)
 let users = [
@@ -37,57 +39,56 @@ let users = [
   }
 ]
 
-const addUser = (userData) => {
+const addUser = async (userData) => {
   const newUser = {
-    id: Date.now(),
     ...userData,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
-  }
-  users.push(newUser)
-  return newUser
-}
+  };
+  const userRef = await db.collection(USERS_COLLECTION).add(newUser);
+  const userSnap = await userRef.get();
+  return { id: userRef.id, ...userSnap.data() };
+};
 
-const findUserByEmail = (email) => {
-  return users.find(user => user.email === email)
-}
+const findUserByEmail = async (email) => {
+  const snapshot = await db.collection(USERS_COLLECTION).where('email', '==', email).get();
+  if (snapshot.empty) return null;
+  const doc = snapshot.docs[0];
+  return { id: doc.id, ...doc.data() };
+};
 
-const findUserById = (id) => {
-  return users.find(user => user.id === parseInt(id))
-}
+const findUserById = async (id) => {
+  const doc = await db.collection(USERS_COLLECTION).doc(id).get();
+  if (!doc.exists) return null;
+  return { id: doc.id, ...doc.data() };
+};
 
-const updateUser = (id, updates) => {
-  const index = users.findIndex(user => user.id === parseInt(id))
-  if (index !== -1) {
-    users[index] = { ...users[index], ...updates, updatedAt: new Date().toISOString() }
-    return users[index]
-  }
-  return null
-}
+const updateUser = async (id, updates) => {
+  updates.updatedAt = new Date().toISOString();
+  await db.collection(USERS_COLLECTION).doc(id).update(updates);
+  return findUserById(id);
+};
 
-const deleteUser = (id) => {
-  const index = users.findIndex(user => user.id === parseInt(id))
-  if (index !== -1) {
-    const deletedUser = users[index]
-    users = users.filter(user => user.id !== parseInt(id))
-    return deletedUser
-  }
-  return null
-}
+const deleteUser = async (id) => {
+  const user = await findUserById(id);
+  if (!user) return null;
+  await db.collection(USERS_COLLECTION).doc(id).delete();
+  return user;
+};
 
-const getAllUsers = () => {
-  return users.map(user => {
-    const { password, ...userWithoutPassword } = user
-    return userWithoutPassword
-  })
-}
+const getAllUsers = async () => {
+  const snapshot = await db.collection(USERS_COLLECTION).get();
+  return snapshot.docs.map(doc => {
+    const { password, ...userWithoutPassword } = doc.data();
+    return { id: doc.id, ...userWithoutPassword };
+  });
+};
 
 module.exports = {
-  users,
   addUser,
   findUserByEmail,
   findUserById,
   updateUser,
   deleteUser,
   getAllUsers
-} 
+}; 

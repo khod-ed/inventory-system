@@ -29,11 +29,11 @@ router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 10, search, status } = req.query
 
-    let suppliers = getAllSuppliers()
+    let suppliers = await getAllSuppliers()
 
     // Apply filters
     if (search) {
-      suppliers = searchSuppliers(search)
+      suppliers = await searchSuppliers(search)
     }
 
     if (status) {
@@ -57,7 +57,7 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
-    const supplier = findSupplierById(req.params.id)
+    const supplier = await findSupplierById(req.params.id)
     if (!supplier) {
       return errorResponse(res, 'Supplier not found', 404)
     }
@@ -74,7 +74,7 @@ router.get('/:id', auth, async (req, res) => {
 // @access  Private (Admin)
 router.post('/', adminAuth, supplierValidation, validate, async (req, res) => {
   try {
-    const newSupplier = addSupplier(req.body)
+    const newSupplier = await addSupplier(req.body)
     successResponse(res, newSupplier, 'Supplier created successfully', 201)
   } catch (error) {
     console.error('Create supplier error:', error)
@@ -87,12 +87,12 @@ router.post('/', adminAuth, supplierValidation, validate, async (req, res) => {
 // @access  Private (Admin)
 router.put('/:id', adminAuth, supplierValidation, validate, async (req, res) => {
   try {
-    const supplier = findSupplierById(req.params.id)
+    const supplier = await findSupplierById(req.params.id)
     if (!supplier) {
       return errorResponse(res, 'Supplier not found', 404)
     }
 
-    const updatedSupplier = updateSupplier(req.params.id, req.body)
+    const updatedSupplier = await updateSupplier(req.params.id, req.body)
     successResponse(res, updatedSupplier, 'Supplier updated successfully')
   } catch (error) {
     console.error('Update supplier error:', error)
@@ -105,12 +105,12 @@ router.put('/:id', adminAuth, supplierValidation, validate, async (req, res) => 
 // @access  Private (Admin)
 router.delete('/:id', adminAuth, async (req, res) => {
   try {
-    const supplier = findSupplierById(req.params.id)
+    const supplier = await findSupplierById(req.params.id)
     if (!supplier) {
       return errorResponse(res, 'Supplier not found', 404)
     }
 
-    deleteSupplier(req.params.id)
+    await deleteSupplier(req.params.id)
     successResponse(res, null, 'Supplier deleted successfully')
   } catch (error) {
     console.error('Delete supplier error:', error)

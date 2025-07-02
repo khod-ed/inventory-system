@@ -23,7 +23,7 @@ export const InventoryProvider = ({ children }) => {
   // Load initial data only when authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      loadInitialData()
+    loadInitialData()
     }
   }, [isAuthenticated])
 

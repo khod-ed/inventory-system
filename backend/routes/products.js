@@ -57,19 +57,19 @@ router.get('/', auth, async (req, res) => {
       status 
     } = req.query
 
-    let products = getAllProducts()
+    let products = await getAllProducts()
 
     // Apply filters
     if (search) {
-      products = searchProducts(search)
+      products = await searchProducts(search)
     }
 
     if (category) {
-      products = getProductsByCategory(category)
+      products = await getProductsByCategory(category)
     }
 
     if (supplier) {
-      products = getProductsBySupplier(supplier)
+      products = await getProductsBySupplier(supplier)
     }
 
     if (status) {
@@ -82,15 +82,15 @@ router.get('/', auth, async (req, res) => {
     const paginatedProducts = products.slice(startIndex, endIndex)
 
     // Add category and supplier details
-    const enrichedProducts = paginatedProducts.map(product => {
-      const category = findCategoryById(product.categoryId)
-      const supplier = findSupplierById(product.supplierId)
+    const enrichedProducts = await Promise.all(paginatedProducts.map(async product => {
+      const category = await findCategoryById(product.categoryId)
+      const supplier = await findSupplierById(product.supplierId)
       return {
         ...product,
         category: category ? { id: category.id, name: category.name, color: category.color } : null,
         supplier: supplier ? { id: supplier.id, name: supplier.name } : null
       }
-    })
+    }))
 
     paginatedResponse(res, enrichedProducts, page, limit, products.length)
   } catch (error) {
@@ -104,14 +104,14 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
-    const product = findProductById(req.params.id)
+    const product = await findProductById(req.params.id)
     if (!product) {
       return errorResponse(res, 'Product not found', 404)
     }
 
     // Add category and supplier details
-    const category = findCategoryById(product.categoryId)
-    const supplier = findSupplierById(product.supplierId)
+    const category = await findCategoryById(product.categoryId)
+    const supplier = await findSupplierById(product.supplierId)
     const enrichedProduct = {
       ...product,
       category: category ? { id: category.id, name: category.name, color: category.color } : null,
@@ -133,14 +133,14 @@ router.post('/', adminAuth, productValidation, validate, async (req, res) => {
     const { sku } = req.body
 
     // Check if SKU already exists
-    const existingProduct = findProductBySku(sku)
+    const existingProduct = await findProductBySku(sku)
     if (existingProduct) {
       return errorResponse(res, 'SKU already exists', 400)
     }
 
     // Validate category and supplier exist
-    const category = findCategoryById(req.body.categoryId)
-    const supplier = findSupplierById(req.body.supplierId)
+    const category = await findCategoryById(req.body.categoryId)
+    const supplier = await findSupplierById(req.body.supplierId)
 
     if (!category) {
       return errorResponse(res, 'Category not found', 400)
@@ -150,7 +150,7 @@ router.post('/', adminAuth, productValidation, validate, async (req, res) => {
       return errorResponse(res, 'Supplier not found', 400)
     }
 
-    const newProduct = addProduct(req.body)
+    const newProduct = await addProduct(req.body)
     successResponse(res, newProduct, 'Product created successfully', 201)
   } catch (error) {
     console.error('Create product error:', error)
@@ -163,14 +163,14 @@ router.post('/', adminAuth, productValidation, validate, async (req, res) => {
 // @access  Private (Admin)
 router.put('/:id', adminAuth, productUpdateValidation, validate, async (req, res) => {
   try {
-    const product = findProductById(req.params.id)
+    const product = await findProductById(req.params.id)
     if (!product) {
       return errorResponse(res, 'Product not found', 404)
     }
 
     // Check if SKU is being changed and if it already exists
     if (req.body.sku && req.body.sku !== product.sku) {
-      const existingProduct = findProductBySku(req.body.sku)
+      const existingProduct = await findProductBySku(req.body.sku)
       if (existingProduct) {
         return errorResponse(res, 'SKU already exists', 400)
       }
@@ -178,20 +178,20 @@ router.put('/:id', adminAuth, productUpdateValidation, validate, async (req, res
 
     // Validate category and supplier exist if being updated
     if (req.body.categoryId) {
-      const category = findCategoryById(req.body.categoryId)
+      const category = await findCategoryById(req.body.categoryId)
       if (!category) {
         return errorResponse(res, 'Category not found', 400)
       }
     }
 
     if (req.body.supplierId) {
-      const supplier = findSupplierById(req.body.supplierId)
+      const supplier = await findSupplierById(req.body.supplierId)
       if (!supplier) {
         return errorResponse(res, 'Supplier not found', 400)
       }
     }
 
-    const updatedProduct = updateProduct(req.params.id, req.body)
+    const updatedProduct = await updateProduct(req.params.id, req.body)
     successResponse(res, updatedProduct, 'Product updated successfully')
   } catch (error) {
     console.error('Update product error:', error)
@@ -204,12 +204,12 @@ router.put('/:id', adminAuth, productUpdateValidation, validate, async (req, res
 // @access  Private (Admin)
 router.delete('/:id', adminAuth, async (req, res) => {
   try {
-    const product = findProductById(req.params.id)
+    const product = await findProductById(req.params.id)
     if (!product) {
       return errorResponse(res, 'Product not found', 404)
     }
 
-    deleteProduct(req.params.id)
+    await deleteProduct(req.params.id)
     successResponse(res, null, 'Product deleted successfully')
   } catch (error) {
     console.error('Delete product error:', error)

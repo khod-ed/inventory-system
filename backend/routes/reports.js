@@ -18,12 +18,12 @@ const router = express.Router()
 // @access  Private
 router.get('/dashboard', auth, async (req, res) => {
   try {
-    const products = getAllProducts()
-    const inventory = getAllInventory()
-    const categories = getAllCategories()
-    const suppliers = getAllSuppliers()
-    const lowStockItems = getLowStockItems()
-    const totalValue = getInventoryValue()
+    const products = await getAllProducts()
+    const inventory = await getAllInventory()
+    const categories = await getAllCategories()
+    const suppliers = await getAllSuppliers()
+    const lowStockItems = await getLowStockItems()
+    const totalValue = await getInventoryValue()
 
     // Calculate analytics
     const totalProducts = products.length
@@ -33,48 +33,48 @@ router.get('/dashboard', auth, async (req, res) => {
     const lowStockCount = lowStockItems.length
 
     // Category distribution
-    const categoryDistribution = categories.map(category => {
+    const categoryDistribution = categories.map(async category => {
       const categoryProducts = products.filter(p => p.categoryId === category.id)
       const categoryInventory = inventory.filter(i => {
         const product = products.find(p => p.id === i.productId)
         return product && product.categoryId === category.id
       })
-      const categoryValue = categoryInventory.reduce((total, item) => {
+      const categoryValue = await categoryInventory.reduce(async (total, item) => {
         const product = products.find(p => p.id === item.productId)
         return total + (item.quantity * (product?.cost || 0))
-      }, 0)
+      }, Promise.resolve(0))
 
       return {
         id: category.id,
         name: category.name,
         color: category.color,
         productCount: categoryProducts.length,
-        inventoryValue: categoryValue
+        inventoryValue: await categoryValue
       }
     })
 
     // Supplier distribution
-    const supplierDistribution = suppliers.map(supplier => {
+    const supplierDistribution = suppliers.map(async supplier => {
       const supplierProducts = products.filter(p => p.supplierId === supplier.id)
       const supplierInventory = inventory.filter(i => {
         const product = products.find(p => p.id === i.productId)
         return product && product.supplierId === supplier.id
       })
-      const supplierValue = supplierInventory.reduce((total, item) => {
+      const supplierValue = await supplierInventory.reduce(async (total, item) => {
         const product = products.find(p => p.id === item.productId)
         return total + (item.quantity * (product?.cost || 0))
-      }, 0)
+      }, Promise.resolve(0))
 
       return {
         id: supplier.id,
         name: supplier.name,
         productCount: supplierProducts.length,
-        inventoryValue: supplierValue
+        inventoryValue: await supplierValue
       }
     })
 
     // Recent transactions (last 10)
-    const allTransactions = getInventoryTransactions()
+    const allTransactions = await getInventoryTransactions()
     const recentTransactions = allTransactions
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 10)
@@ -103,8 +103,8 @@ router.get('/dashboard', auth, async (req, res) => {
 // @access  Private
 router.get('/inventory-summary', auth, async (req, res) => {
   try {
-    const products = getAllProducts()
-    const inventory = getAllInventory()
+    const products = await getAllProducts()
+    const inventory = await getAllInventory()
 
     const inventorySummary = inventory.map(item => {
       const product = products.find(p => p.id === item.productId)
@@ -153,8 +153,8 @@ router.get('/inventory-summary', auth, async (req, res) => {
 // @access  Private
 router.get('/low-stock', auth, async (req, res) => {
   try {
-    const lowStockItems = getLowStockItems()
-    const products = getAllProducts()
+    const lowStockItems = await getLowStockItems()
+    const products = await getAllProducts()
 
     const lowStockReport = lowStockItems.map(item => {
       const product = products.find(p => p.id === item.productId)
@@ -198,7 +198,7 @@ router.get('/low-stock', auth, async (req, res) => {
 router.get('/transactions', auth, async (req, res) => {
   try {
     const { startDate, endDate, type } = req.query
-    let transactions = getInventoryTransactions()
+    let transactions = await getInventoryTransactions()
 
     // Filter by date range if provided
     if (startDate || endDate) {

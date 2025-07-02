@@ -36,7 +36,7 @@ router.post('/login', loginValidation, validate, async (req, res) => {
     const { email, password } = req.body
 
     // Find user by email
-    const user = findUserByEmail(email)
+    const user = await findUserByEmail(email)
     if (!user) {
       return errorResponse(res, 'Invalid credentials', 401)
     }
@@ -75,7 +75,7 @@ router.post('/signup', signupValidation, validate, async (req, res) => {
     const { firstName, lastName, email, password } = req.body
 
     // Check if user already exists
-    const existingUser = findUserByEmail(email)
+    const existingUser = await findUserByEmail(email)
     if (existingUser) {
       return errorResponse(res, 'Email already exists', 400)
     }
@@ -84,7 +84,7 @@ router.post('/signup', signupValidation, validate, async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // Create new user
-    const newUser = addUser({
+    const newUser = await addUser({
       firstName,
       lastName,
       name: `${firstName} ${lastName}`,
@@ -110,7 +110,7 @@ router.post('/signup', signupValidation, validate, async (req, res) => {
 // @access  Private
 router.get('/me', auth, async (req, res) => {
   try {
-    const user = findUserById(req.user.id)
+    const user = await findUserById(req.user.id)
     if (!user) {
       return errorResponse(res, 'User not found', 404)
     }

@@ -1,3 +1,6 @@
+const { db } = require('../firebase-admin');
+const CATEGORIES_COLLECTION = 'categories';
+
 // Mock categories data
 let categories = [
   {
@@ -47,49 +50,45 @@ let categories = [
   }
 ]
 
-const addCategory = (categoryData) => {
+const addCategory = async (categoryData) => {
   const newCategory = {
-    id: Date.now(),
     ...categoryData,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
-  }
-  categories.push(newCategory)
-  return newCategory
-}
+  };
+  const ref = await db.collection(CATEGORIES_COLLECTION).add(newCategory);
+  const snap = await ref.get();
+  return { id: ref.id, ...snap.data() };
+};
 
-const findCategoryById = (id) => {
-  return categories.find(category => category.id === parseInt(id))
-}
+const findCategoryById = async (id) => {
+  const doc = await db.collection(CATEGORIES_COLLECTION).doc(id).get();
+  if (!doc.exists) return null;
+  return { id: doc.id, ...doc.data() };
+};
 
-const updateCategory = (id, updates) => {
-  const index = categories.findIndex(category => category.id === parseInt(id))
-  if (index !== -1) {
-    categories[index] = { ...categories[index], ...updates, updatedAt: new Date().toISOString() }
-    return categories[index]
-  }
-  return null
-}
+const updateCategory = async (id, updates) => {
+  updates.updatedAt = new Date().toISOString();
+  await db.collection(CATEGORIES_COLLECTION).doc(id).update(updates);
+  return findCategoryById(id);
+};
 
-const deleteCategory = (id) => {
-  const index = categories.findIndex(category => category.id === parseInt(id))
-  if (index !== -1) {
-    const deletedCategory = categories[index]
-    categories = categories.filter(category => category.id !== parseInt(id))
-    return deletedCategory
-  }
-  return null
-}
+const deleteCategory = async (id) => {
+  const category = await findCategoryById(id);
+  if (!category) return null;
+  await db.collection(CATEGORIES_COLLECTION).doc(id).delete();
+  return category;
+};
 
-const getAllCategories = () => {
-  return categories
-}
+const getAllCategories = async () => {
+  const snapshot = await db.collection(CATEGORIES_COLLECTION).get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
 
 module.exports = {
-  categories,
   addCategory,
   findCategoryById,
   updateCategory,
   deleteCategory,
   getAllCategories
-} 
+}; 

@@ -24,7 +24,7 @@ const categoryValidation = [
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    const categories = getAllCategories()
+    const categories = await getAllCategories()
     successResponse(res, categories)
   } catch (error) {
     console.error('Get categories error:', error)
@@ -37,7 +37,7 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
-    const category = findCategoryById(req.params.id)
+    const category = await findCategoryById(req.params.id)
     if (!category) {
       return errorResponse(res, 'Category not found', 404)
     }
@@ -54,7 +54,7 @@ router.get('/:id', auth, async (req, res) => {
 // @access  Private (Admin)
 router.post('/', adminAuth, categoryValidation, validate, async (req, res) => {
   try {
-    const newCategory = addCategory(req.body)
+    const newCategory = await addCategory(req.body)
     successResponse(res, newCategory, 'Category created successfully', 201)
   } catch (error) {
     console.error('Create category error:', error)
@@ -67,12 +67,12 @@ router.post('/', adminAuth, categoryValidation, validate, async (req, res) => {
 // @access  Private (Admin)
 router.put('/:id', adminAuth, categoryValidation, validate, async (req, res) => {
   try {
-    const category = findCategoryById(req.params.id)
+    const category = await findCategoryById(req.params.id)
     if (!category) {
       return errorResponse(res, 'Category not found', 404)
     }
 
-    const updatedCategory = updateCategory(req.params.id, req.body)
+    const updatedCategory = await updateCategory(req.params.id, req.body)
     successResponse(res, updatedCategory, 'Category updated successfully')
   } catch (error) {
     console.error('Update category error:', error)
@@ -85,12 +85,12 @@ router.put('/:id', adminAuth, categoryValidation, validate, async (req, res) => 
 // @access  Private (Admin)
 router.delete('/:id', adminAuth, async (req, res) => {
   try {
-    const category = findCategoryById(req.params.id)
+    const category = await findCategoryById(req.params.id)
     if (!category) {
       return errorResponse(res, 'Category not found', 404)
     }
 
-    deleteCategory(req.params.id)
+    await deleteCategory(req.params.id)
     successResponse(res, null, 'Category deleted successfully')
   } catch (error) {
     console.error('Delete category error:', error)
