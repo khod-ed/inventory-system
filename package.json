@@ -1,6 +1,12 @@
 {
+  "name": "my-inventory-project",
+  "version": "1.0.0",
+  "description": "A simple inventory management system",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
-    "@headlessui/react": "^2.2.4",
-    "@heroicons/react": "^2.2.0"
+    "firebase": "^11.2.0"
   }
 }
