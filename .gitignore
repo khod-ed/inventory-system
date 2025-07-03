@@ -67,3 +67,16 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Firebase service account keys
+serviceAccountKey.json
+serviceAccountkey.json
+**/serviceAccountKey.json
+**/serviceAccountkey.json
+
+# Environment variables
+config.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

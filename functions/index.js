@@ -40,6 +40,8 @@ app.use(cors({
   ],
   credentials: true,
 }));
+
+// Handle preflight requests for all routes
 app.options('*', cors());
 
 // Rate limiting
