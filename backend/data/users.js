@@ -1,6 +1,4 @@
-const { db } = require('../firebase-admin');
 const bcrypt = require('bcryptjs');
-const USERS_COLLECTION = 'users';
 
 // Mock users data (in a real app, this would be in a database)
 let users = [
@@ -41,46 +39,48 @@ let users = [
 
 const addUser = async (userData) => {
   const newUser = {
+    id: users.length + 1,
     ...userData,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  const userRef = await db.collection(USERS_COLLECTION).add(newUser);
-  const userSnap = await userRef.get();
-  return { id: userRef.id, ...userSnap.data() };
+  users.push(newUser);
+  return newUser;
 };
 
 const findUserByEmail = async (email) => {
-  const snapshot = await db.collection(USERS_COLLECTION).where('email', '==', email).get();
-  if (snapshot.empty) return null;
-  const doc = snapshot.docs[0];
-  return { id: doc.id, ...doc.data() };
+  return users.find(user => user.email === email) || null;
 };
 
 const findUserById = async (id) => {
-  const doc = await db.collection(USERS_COLLECTION).doc(id).get();
-  if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() };
+  return users.find(user => user.id == id) || null;
 };
 
 const updateUser = async (id, updates) => {
-  updates.updatedAt = new Date().toISOString();
-  await db.collection(USERS_COLLECTION).doc(id).update(updates);
-  return findUserById(id);
+  const userIndex = users.findIndex(user => user.id == id);
+  if (userIndex === -1) return null;
+  
+  users[userIndex] = {
+    ...users[userIndex],
+    ...updates,
+    updatedAt: new Date().toISOString()
+  };
+  return users[userIndex];
 };
 
 const deleteUser = async (id) => {
-  const user = await findUserById(id);
-  if (!user) return null;
-  await db.collection(USERS_COLLECTION).doc(id).delete();
-  return user;
+  const userIndex = users.findIndex(user => user.id == id);
+  if (userIndex === -1) return null;
+  
+  const deletedUser = users[userIndex];
+  users.splice(userIndex, 1);
+  return deletedUser;
 };
 
 const getAllUsers = async () => {
-  const snapshot = await db.collection(USERS_COLLECTION).get();
-  return snapshot.docs.map(doc => {
-    const { password, ...userWithoutPassword } = doc.data();
-    return { id: doc.id, ...userWithoutPassword };
+  return users.map(user => {
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   });
 };
 

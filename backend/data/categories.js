@@ -1,5 +1,4 @@
-const { db } = require('../firebase-admin');
-const CATEGORIES_COLLECTION = 'categories';
+
 
 // Mock categories data
 let categories = [
@@ -52,37 +51,42 @@ let categories = [
 
 const addCategory = async (categoryData) => {
   const newCategory = {
+    id: categories.length + 1,
     ...categoryData,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  const ref = await db.collection(CATEGORIES_COLLECTION).add(newCategory);
-  const snap = await ref.get();
-  return { id: ref.id, ...snap.data() };
+  categories.push(newCategory);
+  return newCategory;
 };
 
 const findCategoryById = async (id) => {
-  const doc = await db.collection(CATEGORIES_COLLECTION).doc(id).get();
-  if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() };
+  return categories.find(category => category.id == id) || null;
 };
 
 const updateCategory = async (id, updates) => {
-  updates.updatedAt = new Date().toISOString();
-  await db.collection(CATEGORIES_COLLECTION).doc(id).update(updates);
-  return findCategoryById(id);
+  const categoryIndex = categories.findIndex(category => category.id == id);
+  if (categoryIndex === -1) return null;
+  
+  categories[categoryIndex] = {
+    ...categories[categoryIndex],
+    ...updates,
+    updatedAt: new Date().toISOString()
+  };
+  return categories[categoryIndex];
 };
 
 const deleteCategory = async (id) => {
-  const category = await findCategoryById(id);
-  if (!category) return null;
-  await db.collection(CATEGORIES_COLLECTION).doc(id).delete();
-  return category;
+  const categoryIndex = categories.findIndex(category => category.id == id);
+  if (categoryIndex === -1) return null;
+  
+  const deletedCategory = categories[categoryIndex];
+  categories.splice(categoryIndex, 1);
+  return deletedCategory;
 };
 
 const getAllCategories = async () => {
-  const snapshot = await db.collection(CATEGORIES_COLLECTION).get();
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return categories;
 };
 
 module.exports = {

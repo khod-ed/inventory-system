@@ -1,51 +1,87 @@
-const { db } = require('../firebase-admin');
-const SUPPLIERS_COLLECTION = 'suppliers';
+// Mock suppliers data
+let suppliers = [
+  {
+    id: 1,
+    name: 'TechCorp Solutions',
+    contactPerson: 'John Smith',
+    email: 'john@techcorp.com',
+    phone: '+1-555-0123',
+    address: '123 Tech Street, Silicon Valley, CA 94000',
+    status: 'active',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
+  },
+  {
+    id: 2,
+    name: 'Office Supplies Inc',
+    contactPerson: 'Sarah Johnson',
+    email: 'sarah@officesupplies.com',
+    phone: '+1-555-0456',
+    address: '456 Business Ave, New York, NY 10001',
+    status: 'active',
+    createdAt: '2024-01-02T00:00:00.000Z',
+    updatedAt: '2024-01-02T00:00:00.000Z'
+  },
+  {
+    id: 3,
+    name: 'Furniture World',
+    contactPerson: 'Mike Davis',
+    email: 'mike@furnitureworld.com',
+    phone: '+1-555-0789',
+    address: '789 Furniture Blvd, Chicago, IL 60601',
+    status: 'active',
+    createdAt: '2024-01-03T00:00:00.000Z',
+    updatedAt: '2024-01-03T00:00:00.000Z'
+  }
+];
 
 const addSupplier = async (supplierData) => {
   const newSupplier = {
+    id: suppliers.length + 1,
     ...supplierData,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  const ref = await db.collection(SUPPLIERS_COLLECTION).add(newSupplier);
-  const snap = await ref.get();
-  return { id: ref.id, ...snap.data() };
+  suppliers.push(newSupplier);
+  return newSupplier;
 };
 
 const findSupplierById = async (id) => {
-  const doc = await db.collection(SUPPLIERS_COLLECTION).doc(id).get();
-  if (!doc.exists) return null;
-  return { id: doc.id, ...doc.data() };
+  return suppliers.find(supplier => supplier.id == id) || null;
 };
 
 const updateSupplier = async (id, updates) => {
-  updates.updatedAt = new Date().toISOString();
-  await db.collection(SUPPLIERS_COLLECTION).doc(id).update(updates);
-  return findSupplierById(id);
+  const supplierIndex = suppliers.findIndex(supplier => supplier.id == id);
+  if (supplierIndex === -1) return null;
+  
+  suppliers[supplierIndex] = {
+    ...suppliers[supplierIndex],
+    ...updates,
+    updatedAt: new Date().toISOString()
+  };
+  return suppliers[supplierIndex];
 };
 
 const deleteSupplier = async (id) => {
-  const supplier = await findSupplierById(id);
-  if (!supplier) return null;
-  await db.collection(SUPPLIERS_COLLECTION).doc(id).delete();
-  return supplier;
+  const supplierIndex = suppliers.findIndex(supplier => supplier.id == id);
+  if (supplierIndex === -1) return null;
+  
+  const deletedSupplier = suppliers[supplierIndex];
+  suppliers.splice(supplierIndex, 1);
+  return deletedSupplier;
 };
 
 const getAllSuppliers = async () => {
-  const snapshot = await db.collection(SUPPLIERS_COLLECTION).get();
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return suppliers;
 };
 
 const searchSuppliers = async (query) => {
-  const snapshot = await db.collection(SUPPLIERS_COLLECTION).get();
   const lowercaseQuery = query.toLowerCase();
-  return snapshot.docs
-    .map(doc => ({ id: doc.id, ...doc.data() }))
-    .filter(supplier =>
-      supplier.name.toLowerCase().includes(lowercaseQuery) ||
-      supplier.contactPerson.toLowerCase().includes(lowercaseQuery) ||
-      supplier.email.toLowerCase().includes(lowercaseQuery)
-    );
+  return suppliers.filter(supplier =>
+    supplier.name.toLowerCase().includes(lowercaseQuery) ||
+    supplier.contactPerson.toLowerCase().includes(lowercaseQuery) ||
+    supplier.email.toLowerCase().includes(lowercaseQuery)
+  );
 };
 
 module.exports = {

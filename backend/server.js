@@ -25,8 +25,6 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
-  'https://my-inventory-project-9dccf.web.app',
-  'https://my-inventory-project-9dccf.firebaseapp.com',
   'https://v0-admin-inventory-system-3y9awla45-khod-eds-projects.vercel.app',
   // Add your production frontend domain here if different
 ];
