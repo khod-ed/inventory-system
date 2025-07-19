@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'https://us-central1-my-inventory-project-9dccf.cloudfunctions.net/api'
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-render-backend-url.onrender.com/api' // Update this when you deploy to Render
+  : 'http://localhost:10000/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
