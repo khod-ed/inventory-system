@@ -67,6 +67,7 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+<<<<<<< Updated upstream
 
 # Firebase service account keys
 serviceAccountKey.json
@@ -80,3 +81,6 @@ config.env
 .env.development.local
 .env.test.local
 .env.production.local
+=======
+.vercel
+>>>>>>> Stashed changes
